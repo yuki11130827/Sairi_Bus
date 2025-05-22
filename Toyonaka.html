@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>再履バス発車案内(豊中キャンパス)</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #ffffff;
+      color: rgb(0, 0, 0);
+      padding: 20px;
+    }
+    .log {
+      white-space: pre-line;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>バス発車案内</h1>
+  <div id="output" class="log">読み込み中...</div>
+
+  <script>
+    const for_Suita_hour = [8,8,8,8,8,9,9,9,9,9,10,10,10,11,12,12,12,12,12,12,13,13,14,15,15,15,16,16,16,16,17,17,17,17,18,18,18,18,19,19,20];
+    const for_Suita_minute = [0,5,10,15,45,0,20,45,50,55,0,40,50,30,5,10,15,40,45,55,5,35,25,10,35,45,0,30,40,55,20,25,40,45,0,15,30,55,0,25,10];
+    const for_Suita_destination = ["吹田","吹田","吹田","箕面","吹田","吹田","箕面経由吹田","吹田","吹田","箕面","箕面","吹田","吹田","箕面経由吹田","吹田","吹田","箕面","箕面経由吹田","吹田","吹田","箕面","箕面経由吹田","箕面経由吹田","箕面経由吹田","吹田","箕面","箕面経由吹田","吹田","箕面","吹田","箕面","箕面経由吹田","箕面","吹田","吹田","箕面","吹田","吹田","箕面","箕面経由吹田","箕面経由吹田"];
+    const for_Suita_type = ["直行","直行","直行","普通","直行","直行","普通","直行","直行","普通","普通","直行","直行","普通","直行","直行","普通","普通","直行","直行","普通","普通","普通","普通","直行","普通","普通","直行","普通","直行","普通","普通","普通","直行","直行","普通","直行","直行","普通","普通","普通"];
+    
+    let currentBus = -999;
+
+    function checkNextBus() {
+      const now = new Date();
+      let hour = now.getHours();
+      let minute = now.getMinutes();
+      let nextBus = -1;
+      let p_hour = 0;
+
+      for (let i = 0; i < for_Suita_hour.length; i++) {
+        if (for_Suita_hour[i] >= hour) {
+          p_hour = i;
+          break;
+        }
+      }
+      for (let i = p_hour; i < for_Suita_minute.length; i++) {
+        if (for_Suita_hour[i] > hour || (for_Suita_hour[i] === hour && for_Suita_minute[i] >= minute)) {
+          nextBus = i;
+          break;
+        }
+      }
+      if (nextBus === -1) nextBus = 0;
+
+      if (nextBus !== currentBus) {
+        let log = "=============================================\n";
+        log += `ただいま ${now.toLocaleString()}\n`;
+        log += `今度の発車は ${for_Suita_hour[nextBus]}時${for_Suita_minute[nextBus]}分発 ${for_Suita_type[nextBus]} ${for_Suita_destination[nextBus]}行です。\n`;
+
+        if (for_Suita_destination[nextBus] === "吹田") {
+          log += "箕面には停まりません。ご注意ください。\n次は吹田に停まります。\n";
+          for (let i = nextBus + 1; i < for_Suita_destination.length; i++) {
+            if (for_Suita_destination[i].includes("箕面")) {
+              log += `次の箕面へ行くバスは ${for_Suita_hour[i]}時${for_Suita_minute[i]}分発 ${for_Suita_type[i]} ${for_Suita_destination[i]}行です。\n`;
+              break;
+            }
+          }
+        } else if (for_Suita_destination[nextBus] === "箕面経由吹田") {
+          log += "次は箕面に停まります。\n";
+        } else if (for_Suita_destination[nextBus] === "箕面") {
+          log += "このバスは箕面止まりです。吹田へはまいりません。\n次は箕面に停まります。\n";
+          for (let i = nextBus + 1; i < for_Suita_destination.length; i++) {
+            if (for_Suita_destination[i].includes("吹田")) {
+              log += `次の吹田へ行くバスは ${for_Suita_hour[i]}時${for_Suita_minute[i]}分発 ${for_Suita_type[i]} ${for_Suita_destination[i]}行です。\n`;
+              break;
+            }
+          }
+        }
+
+        document.getElementById("output").textContent = log;
+        currentBus = nextBus;
+      }
+    }
+
+    setInterval(checkNextBus, 1000);
+  </script>
+</body>
+</html>
